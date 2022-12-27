@@ -14,7 +14,7 @@ def main():
 
     screen.fill(color_bg)
     font = pygame.font.Font("Fonts/msjh.ttc", 24)
-    text = font.render('HEHE', True, black)
+    text = font.render('點這裡', True, black)
     text_clicked = font.render("Clicked", True, black)
     text_rect = text.get_rect(center=(width/2, height/2))
     text_clicked_rect = text_clicked.get_rect(center=(width/2, height/2))
