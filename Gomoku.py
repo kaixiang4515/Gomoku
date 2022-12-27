@@ -15,8 +15,13 @@ def main_page(screen, text_create, text_create_rect, text_join, text_join_rect):
     pygame.draw.rect(screen, (238, 0, 0), text_join_rect)
     screen.blit(text_join, text_join_rect)
 
-def input(screen):
+def input(screen, state):
     font = pygame.font.Font("Fonts/msjh.ttc", 32)
+    if state == 1:
+        text_box = font.render('port', True, black)
+    else:
+        text_box = font.render('ip:port', True, black)
+    text_rect = text_box.get_rect(center = (width/2, height/2-50))
     input_box = pygame.Rect(100, 100, 140, 42)
     color_inactive = (100, 100, 200)
     color_active = (200, 200, 255)
@@ -25,7 +30,7 @@ def input(screen):
     active = False
 
     screen.fill(color_bg)
-    
+
     while 1:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -49,6 +54,7 @@ def input(screen):
         input_box.center = (width/2, height/2)
 
         screen.fill(color_bg)
+        screen.blit(text_box, text_rect)
         screen.blit(text_surface, (input_box.x+5, input_box.y))
         pygame.draw.rect(screen, color, input_box, 3)
         pygame.display.flip()
@@ -83,13 +89,14 @@ def main():
         if state == 0:
             main_page(screen, text_create, text_create_rect, text_join, text_join_rect)
         elif state == 1:
-            ip, port = input(screen).split(':')
+            ip = '0.0.0.0'
+            port = input(screen, state)
             port = int(port)
             print(ip)
             print(port)
             state = 0
         elif state == 2:
-            ip, port = input(screen).split(':')
+            ip, port = input(screen, state).split(':')
             port = int(port)
             print(ip)
             print(port)
