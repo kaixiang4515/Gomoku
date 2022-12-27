@@ -3,8 +3,8 @@ import pygame
 
 def main():
     # Settings
-    width = 600
-    height = 300
+    width = 670
+    height = 670
     color_background = (0, 0, 0)
     color_inactive = (100, 100, 200)
     color_active = (200, 200, 255)

@@ -1,10 +1,12 @@
-import sys, pygame
+import sys, pygame, socket, json
 from pygame.locals import QUIT
 
 black = (0, 0, 0)
 white = (255, 255, 255)
 color_bg = (238, 154, 73)
 size = width, height = (670, 670)
+ip = ''
+port = 0
 
 def main_page(screen, text_create, text_create_rect, text_join, text_join_rect):
     screen.fill(color_bg)
@@ -15,12 +17,41 @@ def main_page(screen, text_create, text_create_rect, text_join, text_join_rect):
 
 def input(screen):
     font = pygame.font.Font("Fonts/msjh.ttc", 32)
-    input_box = pygame.Rect(100, 100, 140, 32)
+    input_box = pygame.Rect(100, 100, 140, 42)
     color_inactive = (100, 100, 200)
     color_active = (200, 200, 255)
     color = color_inactive
-    text = ""
+    text = ''
     active = False
+
+    screen.fill(color_bg)
+    
+    while 1:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                active = True if input_box.collidepoint(event.pos) else False
+                color = color_active if active else color_inactive
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        return text
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        text += event.unicode
+        
+        text_surface = font.render(text, True, color)
+        input_box_width = max(200, text_surface.get_width()+10)
+        input_box.w = input_box_width
+        input_box.center = (width/2, height/2)
+
+        screen.fill(color_bg)
+        screen.blit(text_surface, (input_box.x+5, input_box.y))
+        pygame.draw.rect(screen, color, input_box, 3)
+        pygame.display.flip()
 
 def main():
     state = 0 # 0:main page, 1:create room, 2:join room
@@ -46,22 +77,24 @@ def main():
                     state = 1
                 elif text_join_rect.collidepoint(event.pos):
                     state = 2
-            
+        
+        #print(state)
+        text = ''
         if state == 0:
             main_page(screen, text_create, text_create_rect, text_join, text_join_rect)
         elif state == 1:
-            screen.fill(color_bg)
+            ip, port = input(screen).split(':')
+            port = int(port)
+            print(ip)
+            print(port)
+            state = 0
         elif state == 2:
-            screen.fill(color_bg)
+            ip, port = input(screen).split(':')
+            port = int(port)
+            print(ip)
+            print(port)
+            state = 0
 
-        '''
-        if button_clicked:
-            pygame.draw.rect(screen, (100, 100, 100), text_clicked_rect)
-            screen.blit(text_clicked, text_clicked_rect)
-        else:
-            pygame.draw.rect(screen, (100, 100, 100), text_rect)
-            screen.blit(text, text_rect)
-        '''
         pygame.display.update()
 
 if __name__ == '__main__':
