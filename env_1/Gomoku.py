@@ -15,7 +15,7 @@ def main_page(screen, text_create, text_create_rect, text_join, text_join_rect):
     pygame.draw.rect(screen, (238, 0, 0), text_join_rect)
     screen.blit(text_join, text_join_rect)
 
-def input(screen, state):
+def input_box(screen, state):
     font = pygame.font.Font("Fonts/msjh.ttc", 32)
     if state == 1:
         text_box = font.render('port', True, black)
@@ -59,6 +59,22 @@ def input(screen, state):
         pygame.draw.rect(screen, color, input_box, 3)
         pygame.display.flip()
 
+def create_room(screen):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    font = pygame.font.Font("Fonts/msjh.ttc", 34)
+    text = font.render('Waiting...', True, black)
+    text_rect = text.get_rect(center=(width/2, height/2-100))
+    server.bind((ip, port))
+    server.listen(1)
+    print('Listening at {}'.format(server.getsockname()))
+    screen.fill(color_bg)
+    screen.blit(text, text_rect)
+    pygame.display.update()
+    while 1:
+        conn, ip_client = server.accept()
+        data = server.recv(65535)
+        
+
 def main():
     state = 0 # 0:main page, 1:create room, 2:join room
 
@@ -90,13 +106,15 @@ def main():
             main_page(screen, text_create, text_create_rect, text_join, text_join_rect)
         elif state == 1:
             ip = '0.0.0.0'
-            port = input(screen, state)
+            port = input_box(screen, state)
             port = int(port)
             print(ip)
             print(port)
-            state = 0
+            #state = 0
+            create_room(screen)
+
         elif state == 2:
-            ip, port = input(screen, state).split(':')
+            ip, port = input_box(screen, state).split(':')
             port = int(port)
             print(ip)
             print(port)
