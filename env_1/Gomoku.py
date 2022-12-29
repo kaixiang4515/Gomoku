@@ -64,6 +64,10 @@ def create_room(screen):
     font = pygame.font.Font("Fonts/msjh.ttc", 34)
     text = font.render('Waiting...', True, black)
     text_rect = text.get_rect(center=(width/2, height/2-100))
+    global ip, port
+    print('In create_room:\n')
+    print(ip)
+    print(port)
     server.bind((ip, port))
     server.listen(1)
     print('Listening at {}'.format(server.getsockname()))
@@ -72,8 +76,25 @@ def create_room(screen):
     pygame.display.update()
     while 1:
         conn, ip_client = server.accept()
-        data = server.recv(65535)
+        while 1:
+            data = conn.recv(65535)
+            if len(data) == 0:
+                conn.close()
+                break
+            print('recv: ' + data.decode())
         
+        break
+    server.close()
+
+def join_room(screen):
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    global ip, port
+    client.connect((ip, port))
+    message = 'Hello'
+    for i in range(10):
+        client.sendall(message.encode())
+    
+    client.close()
 
 def main():
     state = 0 # 0:main page, 1:create room, 2:join room
@@ -87,6 +108,7 @@ def main():
     text_create_rect = text_create.get_rect(center=(width/2, height/2-100))
     text_join = font.render('加入房間', True, black)
     text_join_rect = text_join.get_rect(center=(width/2, height/2+100))
+    global ip, port
 
     while 1:
         for event in pygame.event.get():
@@ -106,19 +128,19 @@ def main():
             main_page(screen, text_create, text_create_rect, text_join, text_join_rect)
         elif state == 1:
             ip = '0.0.0.0'
-            port = input_box(screen, state)
-            port = int(port)
+            port = int(input_box(screen, state))
             print(ip)
             print(port)
-            #state = 0
             create_room(screen)
+            #state = 0
 
         elif state == 2:
             ip, port = input_box(screen, state).split(':')
             port = int(port)
             print(ip)
             print(port)
-            state = 0
+            join_room(screen)
+            #state = 0
 
         pygame.display.update()
 
