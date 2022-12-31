@@ -74,7 +74,8 @@ def create_room(screen):
     screen.fill(color_bg)
     screen.blit(text, text_rect)
     pygame.display.update()
-    while 1:
+    
+    for i in range(10):
         conn, ip_client = server.accept()
         while 1:
             data = conn.recv(65535)
@@ -82,19 +83,17 @@ def create_room(screen):
                 conn.close()
                 break
             print('recv: ' + data.decode())
-        
-        break
+
     server.close()
 
 def join_room(screen):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    global ip, port
-    client.connect((ip, port))
     message = 'Hello'
+    global ip, port
     for i in range(10):
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((ip, port))
         client.sendall(message.encode())
-    
-    client.close()
+        client.close()
 
 def main():
     state = 0 # 0:main page, 1:create room, 2:join room
