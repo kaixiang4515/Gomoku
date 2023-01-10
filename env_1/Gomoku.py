@@ -1,4 +1,5 @@
 import sys, pygame, socket, json
+import time
 from pygame.locals import QUIT
 
 black = (0, 0, 0)
@@ -74,26 +75,114 @@ def create_room(screen):
     screen.fill(color_bg)
     screen.blit(text, text_rect)
     pygame.display.update()
-    
-    for i in range(10):
-        conn, ip_client = server.accept()
-        while 1:
-            data = conn.recv(65535)
-            if len(data) == 0:
-                conn.close()
-                break
-            print('recv: ' + data.decode())
 
+    
+    while 1:
+        conn, ip_client = server.accept()
+        text = font.render('Connected!', True, black)
+        text_rect = text.get_rect(center=(width/2, height/2-100))
+        screen.fill(color_bg)
+        screen.blit(text, text_rect)
+        pygame.display.update()
+        data = conn.recv(65535)
+        conn.close()
+        if data.decode() == 'exit':
+            break
+        print('recv: ' + data.decode())
+    
     server.close()
+    server = None
+    
 
 def join_room(screen):
     message = 'Hello'
     global ip, port
-    for i in range(10):
+    dic = {
+        'color' : None,
+        'state' : 'join'
+    }
+
+    s_data = json.dumps(dic).encode() #sent data
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((ip, port))
+    client.sendall(s_data)
+    r_data = client.recv(65535) #received data
+    print('from {} recv: {}'.format(ip, r_data.decode()))
+    client.close()
+    dic = json.loads(r_data.decode())
+
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((ip, port))
+    dic['state'] = 'ready'
+    s_data = json.dumps(dic).encode()
+    client.sendall(s_data)
+    client.close()
+
+    while 1:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((ip, port))
+        r_data = client.recv(65535)
+        print('from {} recv: {}'.format(ip, r_data.decode()))
+        dic = json.loads(r_data.decode())
+        if dic['state'] == 'end':
+            print('End...')
+            client.close()
+            break
+        elif dic['state'] == 'black turn' and dic['color'] == 'black':
+            dic['message'] = 'I am black'
+            dic['state'] = 'black speak'
+            s_data = json.dumps(dic).encode()
+            client.sendall(s_data)
+            client.close()
+        elif dic['state'] == 'white turn' and dic['color'] == 'white':
+            dic['message'] = 'I am white'
+            dic['state'] = 'white speak'
+            s_data = json.dumps(dic).encode()
+            client.sendall(s_data)
+            client.close()
+
+    
+
+
+    '''
+    for i in range(3):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((ip, port))
         client.sendall(message.encode())
+        data = client.recv(65535)
+        print('from {} recv: {}'.format(ip, data.decode()))
+        message = data.decode() + '!'
         client.close()
+    
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((ip, port))
+    message = 'exit'
+    client.sendall(message.encode())
+    client.close()
+    '''
+
+def draw_board(screen):
+    screen.fill(color_bg)
+    for i in range(27,670,44):
+        #先畫豎線
+        if i==27 or i==670-27:#邊緣線稍微粗一些
+            pygame.draw.line(screen,black,[i,27],[i,670-27],4)
+        else:
+            pygame.draw.line(screen,black,[i,27],[i,670-27],2)
+        #再畫橫線
+        if i==27 or i==670-27:#邊緣線稍微粗一些
+            pygame.draw.line(screen,black,[27,i],[670-27,i],4)
+        else:
+            pygame.draw.line(screen,black,[27,i],[670-27,i],2)
+
+    #在棋盤中心畫個小圓表示正中心位置
+    pygame.draw.circle(screen, black,[27+44*7,27+44*7], 8,0)
+    pygame.display.update()
+
+def play(screen):
+    draw_board(screen)
+    print("in play()")
+    #while 1: pygame.display.update()
 
 def main():
     state = 0 # 0:main page, 1:create room, 2:join room
@@ -131,7 +220,10 @@ def main():
             print(ip)
             print(port)
             create_room(screen)
-            #state = 0
+            play(screen)
+            pygame.display.update()
+            time.sleep(3)
+            state = 0
 
         elif state == 2:
             ip, port = input_box(screen, state).split(':')
@@ -139,7 +231,9 @@ def main():
             print(ip)
             print(port)
             join_room(screen)
-            #state = 0
+            play(screen)
+            time.sleep(3)
+            state = 0
 
         pygame.display.update()
 
